@@ -5,10 +5,15 @@
 #ifndef PROGGPU_RUN_FUNTIONS_H
 #define PROGGPU_RUN_FUNTIONS_H
 
-void run_openmp(void);
+#include <stddef.h>
+#include <stdint.h>
 
-void run_cuda(void);
+int32_t run_config(const char *filename, size_t *matCol, size_t *matRow, float *step);
 
-void run_sequentiel(void);
+int32_t run_openmp(size_t *matCol, size_t *matRow, float *step);
+
+int32_t run_cuda(size_t *matCol, size_t *matRow, float *step);
+
+int32_t run_sequentiel(size_t *matCol, size_t *matRow, float *step);
 
 #endif //PROGGPU_RUN_FUNTIONS_H

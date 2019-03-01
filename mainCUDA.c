@@ -3,9 +3,16 @@
 #include <stdbool.h>
 #include <run_funtions.h>
 
+/*
+ * args : fichierConf flagCuda/OMP
+ */
 int main(int argc, char *argv[]) {
 	bool flagCuda = false;
 	bool sequentiel = true;
+
+	size_t matCol = 0, matRow = 0;
+	uint32_t returnValue, arg;
+	float step = 0.f;
 
 	/*
 	 * Arguments.
@@ -14,8 +21,9 @@ int main(int argc, char *argv[]) {
 	 * Si un argument à 0 : OpenMP
 	 */
 	switch (argc) {
-		case 2:
-			int arg = atoi(argv[1]);
+		case 3:
+			//int32_t arg;
+			arg = atoi(argv[3]);
 			flagCuda = (arg == 0) ? true : false;
 			sequentiel = false;
 			switch (flagCuda) {
@@ -30,17 +38,24 @@ int main(int argc, char *argv[]) {
 			}
 			break;
 
-		default:
+		case 2:
 			puts("Code sequentiel lance.");
+			break;
+
+		default:
+			puts("Cassé :D");
 			break;
 	}
 
-	if (flagCuda && !sequentiel)
-		run_cuda();
-	else if (!flagCuda && !sequentiel)
-		run_openmp();
-	else
-		run_sequentiel();
+	if (run_config(argv[2], &matCol, &matRow, &step) == EXIT_FAILURE)
+		return EXIT_FAILURE;
 
-	return EXIT_SUCCESS;
+	if (flagCuda && !sequentiel)
+		returnValue = run_cuda(&matCol, &matRow, &step);
+	else if (!flagCuda && !sequentiel)
+		returnValue = run_openmp(&matCol, &matRow, &step);
+	else
+		returnValue = run_sequentiel(&matCol, &matRow, &step);
+
+	return returnValue;
 }
