@@ -2,51 +2,56 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdbool.h>
+#include <opencv2/core/core_c.h>
 
 /* user include */
-#include <omp_seq_code/run_functions.h>
-#include <structures.h>
+#include <run_functions.h>
 
 int main(int argc, char *argv[]) {
 	/*
-	 * 2 arguments : fichier de conf + flag omp = 1 sinon séquentiel.
+	 * 2/3 arguments : fichierConf, flagOMP.
 	 * Séquentiel par défaut si juste un seul argument.
 	 */
-	bool returnValue = false;
-	int32_t omp = 0;
-	size_t matRow = 0, matCol = 0;
-	float step = 0.f, degre = 0.f, coeffD = 0.f;
-	point heatPoint = {0, 0};
 
-	if (argc >= 2) {
-		if (!run_config(argv[2], &matCol, &matRow, &step, &degre, &coeffD, &heatPoint)) {
-			fprintf(stderr, "Erreur pour la lecture de la configuration.\n");
+	int32_t returnValue = 0, omp = 0;
+	uint32_t sortieImage = 1;
+	size_t matRow = 0, matCol = 0, numIter = 1, numHeatPoint = 0, sx = 1, sy = 1;
+	float *matrix = NULL, newMatrix = NULL;
+	float coeffD = 0.2f;
+	const float convergence = 1e-3f;
+	src_t *heatPoint = NULL;
+
+	CvMat *img = NULL;
+
+	if (argc == 2 || argc == 3) {
+		if (!run_config(argv[1], matrix, newMatrix, &matCol, &matRow, &numIter, &coeffD, &sortieImage, heatPoint, &numHeatPoint))
 			return EXIT_FAILURE;
-		}
 
 		if (argc == 3) {
-			omp = atoi(argv[3]);
+			omp = (int32_t) strtol(argv[3], NULL, 10);
 		}
 	} else {
-		fprintf(stderr, "Erreur d'arguments : fichier_config flagOmp");
+		fprintf(stderr, "Utilisation : <FichierConfig> <FlagOMP>\n");
+		fprintf(stderr, "\t<FichierConfig> : obligatoire. C'est un fichier texte qui permet de configurer le problème entièrement. + de détails dans le fichier.\n");
+		fprintf(stderr, "\t<FlagOMP> : optionnelle. Par défaut, séquentielle. Si différent de 0, calcul parallèle avec OpenMP activé.\n");
 		return EXIT_FAILURE;
 	}
 
+	if (matCol < 256 || matRow < 256) {
+		sx = 256 / matCol;
+		sy = 256 / matRow;
+	}
+
+	img = cvCreateMat(matRow * sy, matCol * sx, CV_8UC3);
+
 	if (omp != 1) {
-		returnValue = run_sequentiel(&matCol, &matRow, &step, &degre, &coeffD, &heatPoint);
+		returnValue = run_sequentiel(matrix, newMatrix, matCol, matRow, numIter, coeffD, sortieImage, heatPoint, numHeatPoint, convergence, img);
 	} else {
-		returnValue = run_openmp(&matCol, &matRow, &step, &degre, &coeffD, &heatPoint);
+		returnValue = run_openmp(matrix, newMatrix, matCol, matRow, numIter, coeffD, sortieImage, heatPoint, numHeatPoint, convergence, img);
 	}
 
-	switch (returnValue) {
-		case true:
-			return EXIT_SUCCESS;
+	end_simulation(matrix, newMatrix, heatPoint);
+	cvReleaseData(img);
 
-		case false:
-			return EXIT_FAILURE;
-
-		default:
-			return EXIT_FAILURE;
-	}
+	return returnValue;
 }

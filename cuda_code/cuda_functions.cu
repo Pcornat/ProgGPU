@@ -4,7 +4,7 @@
 #include "cuda_functions.h"
 #include <stdio.h>
 
-bool run_config(const char *filename, size_t *matCol, size_t *matRow, float *step, float *degre, float *coeffD, point *heatPoint) {
+bool run_configCUDA(const char *filename, size_t *matCol, size_t *matRow, float *step, float *degre, float *coeffD, point *heatPoint) {
 	//Pas de vérif pour la config, flemme
 	FILE *file = NULL;
 	file = fopen(filename, "r");

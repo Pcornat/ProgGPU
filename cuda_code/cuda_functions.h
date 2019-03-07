@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <structures.h>
 
-bool run_config(const char *filename, size_t *matCol, size_t *matRow, float *step, float *degre, float *coeffD, point *heatPoint);
+bool run_configCUDA(const char *filename, size_t *matCol, size_t *matRow, float *step, float *degre, float *coeffD, point *heatPoint);
 
 bool run_cuda(size_t *matCol, size_t *matRow, float *step, float *degre, float *coeffD, point *heatPoint);
 

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
 	fichierConf = argv[1];
 
-	if (!run_config(argv[2], &matCol, &matRow, &step, &degre, &coeffD, &heatPoint))
+	if (!run_configCUDA(argv[2], &matCol, &matRow, &step, &degre, &coeffD, &heatPoint))
 		return EXIT_FAILURE;
 
 	returnValue = run_cuda(&matCol, &matRow, &step, &degre, &coeffD, &heatPoint);
