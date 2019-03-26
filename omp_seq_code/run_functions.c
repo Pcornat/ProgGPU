@@ -3,30 +3,24 @@
 //
 
 #include "run_functions.h"
+#include <stdio.h>
 
-int32_t
-run_openmp(float *matrix, float *newMatrix, size_t matCol, size_t matRow, size_t numIter, const float coeffD, uint32_t sortieImage, src_t *heatPoint, size_t numHeatPoint, const float convergence,
-		   CvMat *img) {
-
-	return EXIT_SUCCESS;
-}
-
-int32_t
-run_sequentiel(float *matrix, float *newMatrix, size_t matCol, size_t matRow, size_t numIter, const float coeffD, uint32_t sortieImage, src_t *heatPoint, size_t numHeatPoint, const float convergence,
-			   CvMat *img) {
-	return EXIT_SUCCESS;
-}
-
-bool run_config(const char *filename, float *matrix, float *newMatrix, size_t *matCol, size_t *matRow, size_t *numIter, float *coeffD, uint32_t *sortieImage, src_t *heatPoint, size_t *numHeatPoint) {
+bool run_config(const char *filename, float *matrix, float *newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage) {
 	//Vérif partielle. Je pense qu'elle est partielle. À voir sinon.
-	int64_t nbrHeatPtTmp = 0;
+	int64_t numHeatPnt = 0;
 	FILE *file = NULL;
 	file = fopen(filename, "r");
 
 	if (file == NULL)
 		return false;
 
-	if (fscanf(file, "%zu", matCol) != 0 || fscanf(file, "%zu", matRow) != 0 || fscanf(file, "%zu", numIter) != 0 || fscanf(file, "%u", sortieImage) != 0 || fscanf(file, "%lu", &nbrHeatPtTmp) != 0) {
+	if (fscanf(file, "%zu", matCol) == EOF || fscanf(file, "%zu", matRow) == EOF || fscanf(file, "%u", numIter) == EOF || fscanf(file, "%u", sortieImage) == EOF ||
+		fscanf(file, "%li", &numHeatPnt) == EOF) {
+		fclose(file);
+		return false;
+	}
+
+	if (numHeatPnt <= 0) {
 		fclose(file);
 		return false;
 	}
@@ -42,50 +36,29 @@ bool run_config(const char *filename, float *matrix, float *newMatrix, size_t *m
 	if (*sortieImage > *numIter)
 		*sortieImage %= *numIter;
 
-	if ((nbrHeatPtTmp <= 0) || (nbrHeatPtTmp > (*matCol * *matRow)))
-		*numHeatPoint = 1;
-
-	if ((heatPoint = (src_t *) malloc(*numHeatPoint * sizeof(src_t))) == NULL) {
-		free(newMatrix);
-		free(matrix);
-		fclose(file);
-		return false;
-	}
-
-	for (size_t i = 0; i < *numHeatPoint; ++i) {
-		uint32_t x = 0, y = 0;
-		float t = 0.f;
-
-		if (fscanf(file, "%u", &x) != 0 || fscanf(file, "%u", &y) != 0 || fscanf(file, "%f", &t) != 0) {
-			free(newMatrix);
-			free(matrix);
-			free(heatPoint);
+	for (int64_t i = 0; i < numHeatPnt; ++i) {
+		int64_t m = 0, n = 0;
+		if (fscanf(file, "%li", &m) == EOF || fscanf(file, "%li", &n) == EOF) {
 			fclose(file);
+			free(matrix);
+			free(newMatrix);
 			return false;
 		}
-
-		if (x > *matCol || y > *matRow) {
-			free(newMatrix);
-			free(matrix);
-			free(heatPoint);
+		if (m < 0 || m >= *matRow || n < 0 || n >= *matCol) {
 			fclose(file);
+			free(matrix);
+			free(newMatrix);
 			return false;
 		}
-
-		if (t <= 0.f)
-			t = 100.f;
-
-		heatPoint[i].x = x;
-		heatPoint[i].y = y;
-		heatPoint[i].t = t;
+		matrix[m * *matRow + n] = 1.0f;
+		newMatrix[m * *matRow + n] = 1.0f;
 	}
 
 	return fclose(file) == 0;
 }
 
-void end_simulation(float *matrix, float *newMatrix, src_t *heatPoint) {
+void end_simulation(float *restrict matrix, float *restrict newMatrix) {
 	puts("Libération mémoire.");
 	free(newMatrix);
 	free(matrix);
-	free(heatPoint);
 }

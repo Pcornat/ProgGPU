@@ -10,21 +10,21 @@
  *
  * @param val_new Tableau contenant les nouvelles valeurs.
  * @param val Tableau contenant les anciennes valeurs.
- * @param nx Nombre d'éléments en X.
- * @param ny Nombre d'éléments en Y
+ * @param m Nombre d'éléments en X.
+ * @param n Nombre d'éléments en Y
  * @param v Coefficient.
  */
-inline void calcul(float *val_new, float *val, size_t nx, size_t ny, float v);
+inline float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n);
 
 /**
  * Mise à jour des sources de chaleur.
  * @param val Tableau contenant les valeurs.
- * @param nx Nombre d'élément en X.
- * @param ny Nombre d'élément en Y.
+ * @param m Nombre d'élément en X.
+ * @param n Nombre d'élément en Y.
  * @param src Tableau contenant les sources.
  * @param n_src Nombre de sources.
  */
-inline void update_src(float *val, size_t nx, size_t ny, src_t *src, size_t n_src);
+inline void swap(float *restrict val, float *restrict val_new, size_t m, size_t n);
 
 /**
  * Processus de simulation de l'équation de la chaleur en 2D
@@ -41,7 +41,7 @@ inline void update_src(float *val, size_t nx, size_t ny, src_t *src, size_t n_sr
  * @param mat Images générées durant la simulation.
  * @return Le nombre d'itération effectuée.
  */
-int simulation(float *val_new, float *val, size_t nx, size_t ny, float v, float convergence, uint32_t nite, src_t *src, size_t nsrc, uint32_t out, CvMat *mat);
+uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, size_t ny, float convergence, uint32_t nite, uint32_t out, CvMat *restrict mat);
 
 
 #endif //PROGGPU_COMPUTE_FUNCTIONS_H

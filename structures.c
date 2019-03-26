@@ -7,7 +7,7 @@
 //#define max(a, b) ((a>b)?a:b)
 //#define min(a, b) ((a<b)?a:b)
 
-void print_img(float *img, CvMat *mat, size_t nx, size_t ny, uint32_t time) {
+void print_img(float *restrict img, CvMat *restrict mat, size_t nx, size_t ny, uint32_t time) {
 	char img_name[500];
 	double start, end;
 	size_t sx = 1, sy = 1;
@@ -20,7 +20,7 @@ void print_img(float *img, CvMat *mat, size_t nx, size_t ny, uint32_t time) {
 		sy = 256 / ny;
 	}
 
-	unsigned char *mat_dat = mat->data.ptr;
+	unsigned char *restrict mat_dat = mat->data.ptr;
 	for (size_t j = 0; j < ny; ++j)
 		for (size_t i = 0; i < nx; ++i) {
 			uchar r, g, b;
@@ -40,19 +40,4 @@ void print_img(float *img, CvMat *mat, size_t nx, size_t ny, uint32_t time) {
 	cvSaveImage(img_name, mat, NULL);
 	end = omp_get_wtime();
 	printf("Écriture de l'image : %s (%f s)\n", img_name, end - start);
-}
-
-void init(float *t, size_t nx, size_t ny) {
-	for (size_t j = 0; j < nx; ++j)
-		for (size_t i = 0; i < nx; ++i)
-			t[i + j * nx] = 0.0f;
-}
-
-void init_src(src_t *s, size_t nx, size_t ny, size_t n) {
-	srand(time(NULL));
-	for (size_t i = 0; i < n; i++) {
-		s[i].x = (uint32_t) ((rand() / ((float) RAND_MAX)) * nx);
-		s[i].y = (uint32_t) ((rand() / ((float) RAND_MAX)) * ny);
-		s[i].t = rand() / ((float) RAND_MAX);
-	}
 }

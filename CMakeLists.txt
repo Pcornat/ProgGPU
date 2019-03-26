@@ -47,7 +47,10 @@ if (${CMAKE_C_COMPILER_ID} STREQUAL "Intel")
 			-xHost
 			-Wall
 			-Wextra
-			${OpenMP_CXX_FLAGS})
+			${OpenMP_C_FLAGS})
+
+	set(CMAKE_C_FLAGS_DEBUG "-g3 -O0")
+	set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -Ofast")
 
 	set(CUDA_OPTIONS
 			PRIVATE
@@ -59,7 +62,8 @@ elseif (${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
 			-pipe
 			-march=native
 			-Wall
-			-Wextra)
+			-Wextra
+			${OpenMP_C_FLAGS})
 endif ()
 
 add_executable(ProgGPU ${CUDA_FILES})
