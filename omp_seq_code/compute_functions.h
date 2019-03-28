@@ -14,7 +14,11 @@
  * @param n Nombre d'éléments en Y
  * @param v Coefficient.
  */
-inline float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n);
+#ifdef NDEBUG
+inline
+#endif
+
+float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n);
 
 /**
  * Mise à jour des sources de chaleur.
@@ -24,7 +28,11 @@ inline float calcul(float *restrict val_new, float *restrict val, size_t m, size
  * @param src Tableau contenant les sources.
  * @param n_src Nombre de sources.
  */
-inline void swap(float *restrict val, float *restrict val_new, size_t m, size_t n);
+#ifdef NDEBUG
+inline
+#endif
+
+void swap(float *restrict val, float *restrict val_new, size_t m, size_t n);
 
 /**
  * Processus de simulation de l'équation de la chaleur en 2D

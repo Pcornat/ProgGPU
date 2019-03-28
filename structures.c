@@ -13,6 +13,7 @@ void print_img(float *restrict img, CvMat *restrict mat, size_t nx, size_t ny, u
 	size_t sx = 1, sy = 1;
 
 	start = omp_get_wtime();
+	memset(img_name, '\0', sizeof(img_name));
 	sprintf(img_name, "img_%05d.png", time);
 
 	if (nx < 256 || ny < 256) {
@@ -37,7 +38,7 @@ void print_img(float *restrict img, CvMat *restrict mat, size_t nx, size_t ny, u
 					mat_dat[(i * sx + ii + (j * sy + jj) * nx * sx) * 3 + 2] = r;
 				}
 		}
-	cvSaveImage(img_name, mat, NULL);
+	cvSaveImage(img_name, mat, NULL); //Bug, à changer. Solution possible : compilé avec g++ et utiliser le C++
 	end = omp_get_wtime();
 	printf("Écriture de l'image : %s (%f s)\n", img_name, end - start);
 }

@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 	CvMat *img = NULL;
 
 	if (argc == 2) {
-		if (!run_config(argv[1], matrix, newMatrix, &matCol, &matRow, &numIter, &sortieImage))
+		if (!run_config(argv[1], &matrix, &newMatrix, &matCol, &matRow, &numIter, &sortieImage))
 			return EXIT_FAILURE;
 	} else {
 		fprintf(stderr, "Utilisation : <FichierConfig>\n");

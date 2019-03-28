@@ -24,7 +24,7 @@
  * @param numHeatPoint Nombre de source de chaleur.
  * @return Vrai : réussi. Faux : nettoyage assuré, échec.
  */
-bool run_config(const char *filename, float *matrix, float *newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage);
+bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage);
 
 /**
  * Libère la mémoire allouée dynamiquement.

@@ -5,7 +5,7 @@
 #include "run_functions.h"
 #include <stdio.h>
 
-bool run_config(const char *filename, float *matrix, float *newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage) {
+bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage) {
 	//Vérif partielle. Je pense qu'elle est partielle. À voir sinon.
 	int64_t numHeatPnt = 0;
 	FILE *file = NULL;
@@ -28,7 +28,7 @@ bool run_config(const char *filename, float *matrix, float *newMatrix, size_t *m
 	if (*matCol <= 0) *matCol = 1000;
 	if (*matRow <= 0) *matRow = 1000;
 
-	if ((matrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL || (newMatrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL) {
+	if ((*matrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL || (*newMatrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL) {
 		fclose(file);
 		return false;
 	}
@@ -50,8 +50,8 @@ bool run_config(const char *filename, float *matrix, float *newMatrix, size_t *m
 			free(newMatrix);
 			return false;
 		}
-		matrix[m * *matRow + n] = 1.0f;
-		newMatrix[m * *matRow + n] = 1.0f;
+		(*matrix)[m * *matRow + n] = 1.0f;
+		(*newMatrix)[m * *matRow + n] = 1.0f;
 	}
 
 	return fclose(file) == 0;
