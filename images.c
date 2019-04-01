@@ -3,6 +3,7 @@
 #include <opencv2/imgcodecs/imgcodecs_c.h>
 #include <omp.h>
 #include <time.h>
+#include <math.h>
 
 //#define max(a, b) ((a>b)?a:b)
 //#define min(a, b) ((a<b)?a:b)
@@ -14,7 +15,7 @@ void print_img(float *restrict img, CvMat *restrict mat, size_t nx, size_t ny, u
 
 	start = omp_get_wtime();
 	memset(img_name, '\0', sizeof(img_name));
-	sprintf(img_name, "img_%05d.png", time);
+	sprintf(img_name, "images/img_%05d.png", time);
 
 	if (nx < 256 || ny < 256) {
 		sx = 256 / nx;

@@ -74,4 +74,4 @@ target_link_libraries(ProgGPU ${LINKER_FLAGS} -shared-libgcc ${OpenCV_LIBRARIES}
 add_executable(Prog ${NOTCUDA_FILES})
 #set_target_properties(Prog PROPERTIES LINKER_LANGUAGE C)
 target_compile_options(Prog ${NOTCUDA_OPTIONS})
-target_link_libraries(Prog ${LINKER_FLAGS} ${OpenMP_C_LIBRARIES} -shared-intel ${OpenCV_LIBRARIES})
+target_link_libraries(Prog ${LINKER_FLAGS} ${OpenMP_C_LIBRARIES} -cxxlib m ${OpenCV_LIBRARIES})
