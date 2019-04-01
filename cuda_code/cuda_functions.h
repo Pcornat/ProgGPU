@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <structures.h>
+#include <images.h>
 
 bool run_configCUDA(const char *filename, size_t *matCol, size_t *matRow, float *step, float *degre, float *coeffD, point *heatPoint);
 

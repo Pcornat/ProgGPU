@@ -26,13 +26,13 @@ set(NOTCUDA_FILES
 		omp_seq_code/openmp_functions.h
 		omp_seq_code/compute_functions.c
 		omp_seq_code/compute_functions.h
-		structures.h
-		structures.c)
+		images.h
+		images.c)
 
 #set_source_files_properties(${NOTCUDA_FILES} PROPERTIES LANGUAGE CXX)
 
 set(CUDA_FILES
-		cuda_code/cuda_functions.cu cuda_code/cuda_functions.h cuda_code/mainCUDA.cu structures.h structures.c)
+		cuda_code/cuda_functions.cu cuda_code/cuda_functions.h cuda_code/mainCUDA.cu images.h images.c)
 
 if (NOT ${CMAKE_HOST_UNIX})
 	message(FATAL_ERROR "Program only for Linux systems.")

@@ -1,4 +1,4 @@
-#include "structures.h"
+#include "images.h"
 #include <stdio.h>
 #include <opencv2/imgcodecs/imgcodecs_c.h>
 #include <omp.h>

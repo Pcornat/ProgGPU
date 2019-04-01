@@ -3,6 +3,7 @@
 #include <math.h>
 
 #ifdef NDEBUG
+
 inline
 #endif
 
@@ -11,6 +12,7 @@ size_t offset(size_t x, size_t y, size_t m) {
 }
 
 #ifdef NDEBUG
+
 inline
 #endif
 
@@ -31,6 +33,7 @@ float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n) {
 }
 
 #ifdef NDEBUG
+
 inline
 #endif
 
@@ -48,7 +51,7 @@ uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, siz
 	float err = 1.0f;
 
 	/* Boucle de résolution */
-	for (n = 1; (n < nite) && (err > convergence); ++n) {
+	for (n = 0; (n < nite) && (err > convergence); ++n) {
 		// Calcul ces nouvelles valeurs
 		err = calcul(val_new, val, nx, ny); // appel de la fonction calcul
 
@@ -56,7 +59,7 @@ uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, siz
 		swap(val, val_new, nx, ny); // appel de la fonction swap
 
 		// Sortie dans une image
-		if (n % out == 0) {
+		if ((n % out) == 0) {
 			printf("%d %f\n", n, err);
 			print_img(val, mat, nx, ny, n);
 		}

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <structures.h>
+#include <images.h>
 #include <cuda_functions.h>
 
 

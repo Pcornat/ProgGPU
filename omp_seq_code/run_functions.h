@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "structures.h"
+#include "images.h"
 
 /**
  * Configuration des variables avec le fichier passé en paramètre.

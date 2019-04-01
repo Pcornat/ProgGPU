@@ -4,6 +4,7 @@
 
 #include "run_functions.h"
 #include <stdio.h>
+#include <compute_functions.h>
 
 bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage) {
 	//Vérif partielle. Je pense qu'elle est partielle. À voir sinon.
@@ -29,6 +30,7 @@ bool run_config(const char *filename, float **matrix, float **newMatrix, size_t 
 	if (*matRow <= 0) *matRow = 1000;
 
 	if ((*matrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL || (*newMatrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL) {
+		perror("Error malloc : ");
 		fclose(file);
 		return false;
 	}
@@ -38,6 +40,7 @@ bool run_config(const char *filename, float **matrix, float **newMatrix, size_t 
 
 	for (int64_t i = 0; i < numHeatPnt; ++i) {
 		int64_t m = 0, n = 0;
+		size_t x, y;
 		if (fscanf(file, "%li", &m) == EOF || fscanf(file, "%li", &n) == EOF) {
 			fclose(file);
 			free(matrix);
@@ -50,8 +53,36 @@ bool run_config(const char *filename, float **matrix, float **newMatrix, size_t 
 			free(newMatrix);
 			return false;
 		}
-		(*matrix)[m * *matRow + n] = 1.0f;
-		(*newMatrix)[m * *matRow + n] = 1.0f;
+		x = (size_t) n, y = (size_t) m;
+		/*
+		 * Les coordonnées données dans le fichier de configuration servent à décrire le milieu du point de chaleur (c'est un carré)
+		 */
+		(*matrix)[offset(x, y, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x, y, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x, y + 1, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x, y + 1, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x + 1, y, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x + 1, y, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x + 1, y + 1, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x + 1, y + 1, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x - 1, y, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x - 1, y, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x, y - 1, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x, y - 1, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x - 1, y - 1, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x - 1, y - 1, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x - 1, y + 1, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x - 1, y + 1, *matRow)] = 1.0f;
+
+		(*matrix)[offset(x + 1, y - 1, *matRow)] = 1.0f;
+		(*newMatrix)[offset(x + 1, y - 1, *matRow)] = 1.0f;
 	}
 
 	return fclose(file) == 0;
