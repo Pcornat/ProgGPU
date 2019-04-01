@@ -4,6 +4,7 @@
 #include <omp.h>
 #include <time.h>
 #include <math.h>
+#include <compute_functions.h>
 
 //#define max(a, b) ((a>b)?a:b)
 //#define min(a, b) ((a<b)?a:b)
@@ -26,11 +27,11 @@ void print_img(float *restrict img, CvMat *restrict mat, size_t nx, size_t ny, u
 	for (size_t j = 0; j < ny; ++j)
 		for (size_t i = 0; i < nx; ++i) {
 			uchar r, g, b;
-			float t = img[i + (ny - 1 - j) * nx];
+			float t = img[offset(j, i, ny)];
 
-			b = (uchar) (255 * (t < 0.5f ? sin(2.0 * M_PI * t) : 0.0));
-			g = (uchar) (255 * (t * t * t));
-			r = (uchar) (255 * sqrtf(t));
+			b = (uchar) (255 * (t < 0.5f ? 1 : 0.0f));
+			g = (uchar) (255 * (t == 1.0f ? 0 : t * 1.3f));
+			r = (uchar) (255 * t);
 
 			for (size_t jj = 0; jj < sy; ++jj)
 				for (size_t ii = 0; ii < sx; ++ii) {

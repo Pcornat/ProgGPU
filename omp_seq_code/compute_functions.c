@@ -46,7 +46,7 @@ void swap(float *restrict val, float *restrict val_new, size_t m, size_t n) {
 	}
 }
 
-uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, size_t ny, float convergence, uint32_t nite, uint32_t out, CvMat *restrict mat) {
+uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, size_t ny, float convergence, uint32_t nite, uint32_t out, CvMat *mat, heatPoint *restrict srcsHeat, size_t numHeat) {
 	uint32_t n;
 	float err = 1.0f;
 
@@ -58,6 +58,9 @@ uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, siz
 		// Échange des valeurs.
 		swap(val, val_new, nx, ny); // appel de la fonction swap
 
+		//Les points de chaleur sont persistents
+		keepHeat(val, val_new, nx, ny, srcsHeat, numHeat);
+
 		// Sortie dans une image
 		if ((n % out) == 0) {
 			printf("%d %f\n", n, err);
@@ -66,4 +69,39 @@ uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, siz
 		++n;
 	}
 	return n;
+}
+
+#ifdef NDEBUG
+
+inline
+#endif
+void keepHeat(float *restrict val, float *restrict val_new, size_t m, size_t n, const heatPoint *restrict srcs, size_t numHeat) {
+	for (size_t i = 0; i < numHeat; ++i) {
+		val[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;
+		val_new[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;
+
+		val[offset(srcs[i].x, srcs[i].y + 1, m)] = 1.0f;
+		val_new[offset(srcs[i].x, srcs[i].y + 1, m)] = 1.0f;
+
+		val[offset(srcs[i].x + 1, srcs[i].y, m)] = 1.0f;
+		val_new[offset(srcs[i].x + 1, srcs[i].y, m)] = 1.0f;
+
+		val[offset(srcs[i].x + 1, srcs[i].y + 1, m)] = 1.0f;
+		val_new[offset(srcs[i].x + 1, srcs[i].y + 1, m)] = 1.0f;
+
+		val[offset(srcs[i].x - 1, srcs[i].y, m)] = 1.0f;
+		val_new[offset(srcs[i].x - 1, srcs[i].y, m)] = 1.0f;
+
+		val[offset(srcs[i].x, srcs[i].y - 1, m)] = 1.0f;
+		val_new[offset(srcs[i].x, srcs[i].y - 1, m)] = 1.0f;
+
+		val[offset(srcs[i].x - 1, srcs[i].y - 1, m)] = 1.0f;
+		val_new[offset(srcs[i].x - 1, srcs[i].y - 1, m)] = 1.0f;
+
+		val[offset(srcs[i].x - 1, srcs[i].y + 1, m)] = 1.0f;
+		val_new[offset(srcs[i].x - 1, srcs[i].y + 1, m)] = 1.0f;
+
+		val[offset(srcs[i].x + 1, srcs[i].y - 1, m)] = 1.0f;
+		val_new[offset(srcs[i].x + 1, srcs[i].y - 1, m)] = 1.0f;
+	}
 }

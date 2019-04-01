@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "images.h"
+#include "compute_functions.h"
 
 /**
  * Configuration des variables avec le fichier passé en paramètre.
@@ -24,7 +25,7 @@
  * @param numHeatPoint Nombre de source de chaleur.
  * @return Vrai : réussi. Faux : nettoyage assuré, échec.
  */
-bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage);
+bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage, heatPoint **srcsHeat, size_t *srcsSize);
 
 /**
  * Libère la mémoire allouée dynamiquement.
@@ -32,6 +33,6 @@ bool run_config(const char *filename, float **matrix, float **newMatrix, size_t 
  * @param newMatrix Matrice contenant les nouvelles valeurs. Nécessaire pour la simulation.
  * @param heatPoint Tableau des sources de chaleur.
  */
-void end_simulation(float *restrict matrix, float *restrict newMatrix);
+void end_simulation(float *restrict matrix, float *restrict newMatrix, heatPoint *restrict srcsHeat);
 
 #endif //PROGGPU_RUN_FUNTIONS_H

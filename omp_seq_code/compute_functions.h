@@ -6,6 +6,11 @@
 #include <opencv2/core/core_c.h>
 #include <images.h>
 
+typedef struct {
+	size_t x;
+	size_t y;
+} heatPoint;
+
 /**
  *
  * \param x The x coordinates
@@ -28,6 +33,7 @@ size_t offset(size_t x, size_t y, size_t m);
  * \param v Coefficient.
  */
 #ifdef NDEBUG
+
 inline
 #endif
 
@@ -42,10 +48,26 @@ float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n);
  * \param n_src Nombre de sources.
  */
 #ifdef NDEBUG
+
 inline
 #endif
 
 void swap(float *restrict val, float *restrict val_new, size_t m, size_t n);
+
+#ifdef NDEBUG
+
+inline
+#endif
+/**
+ * \brief
+ * \param val
+ * \param val_new
+ * \param m
+ * \param n
+ * \param srcs
+ * \param numHeat
+ */
+void keepHeat(float *restrict val, float *restrict val_new, size_t m, size_t n, const heatPoint *restrict srcs, size_t numHeat);
 
 /**
  * Processus de simulation de l'équation de la chaleur en 2D
@@ -62,7 +84,7 @@ void swap(float *restrict val, float *restrict val_new, size_t m, size_t n);
  * \param mat Images générées durant la simulation.
  * \return Le nombre d'itération effectuée.
  */
-uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, size_t ny, float convergence, uint32_t nite, uint32_t out, CvMat *restrict mat);
+uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, size_t ny, float convergence, uint32_t nite, uint32_t out, CvMat *mat, heatPoint *restrict srcsHeat, size_t numHeat);
 
 
 #endif //PROGGPU_COMPUTE_FUNCTIONS_H

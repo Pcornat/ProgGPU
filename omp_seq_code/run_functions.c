@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <compute_functions.h>
 
-bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage) {
+bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage, heatPoint **srcsHeat, size_t *srcsSize) {
 	//Vérif partielle. Je pense qu'elle est partielle. À voir sinon.
 	int64_t numHeatPnt = 0;
 	FILE *file = NULL;
@@ -26,11 +26,21 @@ bool run_config(const char *filename, float **matrix, float **newMatrix, size_t 
 		return false;
 	}
 
+	*srcsSize = numHeatPnt;
+
 	if (*matCol <= 0) *matCol = 1000;
 	if (*matRow <= 0) *matRow = 1000;
 
 	if ((*matrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL || (*newMatrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL) {
-		perror("Error malloc : ");
+		perror("Error malloc matrices : ");
+		fclose(file);
+		return false;
+	}
+
+	if ((*srcsHeat = (heatPoint *) calloc(*srcsSize, sizeof(heatPoint))) == NULL) {
+		perror("Error malloc heatPoints :");
+		free(*matrix);
+		free(*newMatrix);
 		fclose(file);
 		return false;
 	}
@@ -53,7 +63,7 @@ bool run_config(const char *filename, float **matrix, float **newMatrix, size_t 
 			free(newMatrix);
 			return false;
 		}
-		x = (size_t) n, y = (size_t) m;
+		(*srcsHeat)[i].x = x = (size_t) n, (*srcsHeat)[i].y = y = (size_t) m;
 		/*
 		 * Les coordonnées données dans le fichier de configuration servent à décrire le milieu du point de chaleur (c'est un carré)
 		 */
@@ -88,8 +98,9 @@ bool run_config(const char *filename, float **matrix, float **newMatrix, size_t 
 	return fclose(file) == 0;
 }
 
-void end_simulation(float *restrict matrix, float *restrict newMatrix) {
+void end_simulation(float *restrict matrix, float *restrict newMatrix, heatPoint *restrict srcsHeat) {
 	puts("Libération mémoire.");
 	free(newMatrix);
 	free(matrix);
+	free(srcsHeat);
 }
