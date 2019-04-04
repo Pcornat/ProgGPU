@@ -4,7 +4,7 @@
 #include <omp.h>
 #include <time.h>
 #include <math.h>
-#include <compute_functions.h>
+#include "compute_functions.h"
 
 //#define max(a, b) ((a>b)?a:b)
 //#define min(a, b) ((a<b)?a:b)

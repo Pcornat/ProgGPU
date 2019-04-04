@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 99)
 find_package(OpenMP REQUIRED)
 find_package(OpenCV 3.4.5 REQUIRED)
 
-include_directories(. cuda_code/ omp_seq_code/)
+include_directories(.)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 if (NOT ${UNIX})
@@ -20,19 +20,22 @@ set(NOTCUDA_FILES
 		omp_seq_code/mainOMP.c
 		omp_seq_code/run_functions.c
 		omp_seq_code/run_functions.h
-		omp_seq_code/seq_functions.c
-		omp_seq_code/seq_functions.h
-		omp_seq_code/openmp_functions.c
-		omp_seq_code/openmp_functions.h
 		omp_seq_code/compute_functions.c
 		omp_seq_code/compute_functions.h
-		images.h
-		images.c)
+		omp_seq_code/images.h
+		omp_seq_code/images.c)
 
 #set_source_files_properties(${NOTCUDA_FILES} PROPERTIES LANGUAGE CXX)
 
 set(CUDA_FILES
-		cuda_code/cuda_functions.cu cuda_code/cuda_functions.h cuda_code/mainCUDA.cu images.h images.c)
+		cuda_code/cuda_functions.cu
+		cuda_code/cuda_functions.cuh
+		cuda_code/mainCUDA.cu
+		cuda_code/images.cu
+		cuda_code/images.cuh
+		cuda_code/compute_functions.cu
+		cuda_code/compute_functions.cuh
+		cuda_code/useless.c)
 
 if (NOT ${CMAKE_HOST_UNIX})
 	message(FATAL_ERROR "Program only for Linux systems.")
@@ -68,6 +71,7 @@ endif ()
 
 add_executable(ProgGPU ${CUDA_FILES})
 set_target_properties(ProgGPU PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+target_include_directories(ProgGPU BEFORE PRIVATE /opt/cuda/include)
 target_compile_options(ProgGPU ${CUDA_OPTIONS})
 target_link_libraries(ProgGPU ${LINKER_FLAGS} -shared-libgcc ${OpenCV_LIBRARIES})
 

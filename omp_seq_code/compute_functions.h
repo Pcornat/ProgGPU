@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <opencv2/core/core_c.h>
-#include <images.h>
+#include "images.h"
 
 typedef struct {
 	size_t x;
@@ -18,11 +18,7 @@ typedef struct {
  * \param m The number of line.
  * \return
  */
-#ifdef NDEBUG
-
-extern inline
-#endif
-size_t offset(size_t x, size_t y, size_t m);
+extern inline size_t offset(size_t x, size_t y, size_t m);
 
 /**
  *
@@ -32,12 +28,7 @@ size_t offset(size_t x, size_t y, size_t m);
  * \param n Nombre d'éléments en Y
  * \param v Coefficient.
  */
-#ifdef NDEBUG
-
-inline
-#endif
-
-float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n);
+inline float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n);
 
 /**
  * Mise à jour des sources de chaleur.
@@ -47,17 +38,8 @@ float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n);
  * \param src Tableau contenant les sources.
  * \param n_src Nombre de sources.
  */
-#ifdef NDEBUG
+inline void swap(float *restrict val, float *restrict val_new, size_t m, size_t n);
 
-inline
-#endif
-
-void swap(float *restrict val, float *restrict val_new, size_t m, size_t n);
-
-#ifdef NDEBUG
-
-inline
-#endif
 /**
  * \brief
  * \param val
@@ -67,7 +49,7 @@ inline
  * \param srcs
  * \param numHeat
  */
-void keepHeat(float *restrict val, float *restrict val_new, size_t m, size_t n, const heatPoint *restrict srcs, size_t numHeat);
+inline void keepHeat(float *restrict val, float *restrict val_new, size_t m, size_t n, const heatPoint *restrict srcs, size_t numHeat);
 
 /**
  * Processus de simulation de l'équation de la chaleur en 2D
@@ -87,4 +69,4 @@ void keepHeat(float *restrict val, float *restrict val_new, size_t m, size_t n, 
 uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, size_t ny, float convergence, uint32_t nite, uint32_t out, CvMat *mat, heatPoint *restrict srcsHeat, size_t numHeat);
 
 
-#endif //PROGGPU_COMPUTE_FUNCTIONS_H
+#endif //PROGGPU_COMPUTE_FUNCTIONS_CUH

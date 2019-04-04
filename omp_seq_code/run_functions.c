@@ -4,7 +4,7 @@
 
 #include "run_functions.h"
 #include <stdio.h>
-#include <compute_functions.h>
+#include "compute_functions.h"
 
 bool run_config(const char *filename, float **matrix, float **newMatrix, size_t *matCol, size_t *matRow, uint32_t *numIter, uint32_t *sortieImage, heatPoint **srcsHeat, size_t *srcsSize) {
 	//Vérif partielle. Je pense qu'elle est partielle. À voir sinon.

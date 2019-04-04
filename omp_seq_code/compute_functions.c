@@ -2,21 +2,11 @@
 #include <stdio.h>
 #include <math.h>
 
-#ifdef NDEBUG
-
-inline
-#endif
-
-size_t offset(size_t x, size_t y, size_t m) {
+extern inline size_t offset(size_t x, size_t y, size_t m) {
 	return x * m + y;
 }
 
-#ifdef NDEBUG
-
-inline
-#endif
-
-float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n) {
+inline float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n) {
 	// Parcours des éléments du domaine
 	float error = 0.0f;
 #pragma omp parallel for collapse(2) shared(val, val_new) reduction(max: error)
@@ -32,12 +22,7 @@ float calcul(float *restrict val_new, float *restrict val, size_t m, size_t n) {
 	return error;
 }
 
-#ifdef NDEBUG
-
-inline
-#endif
-
-void swap(float *restrict val, float *restrict val_new, size_t m, size_t n) {
+inline void swap(float *restrict val, float *restrict val_new, size_t m, size_t n) {
 #pragma omp parallel for collapse(2) shared(val, val_new)
 	for (size_t j = 1; j < n - 1; ++j) {
 		for (size_t i = 1; i < m - 1; ++i) {
@@ -71,11 +56,7 @@ uint32_t simulation(float *restrict val_new, float *restrict val, size_t nx, siz
 	return n;
 }
 
-#ifdef NDEBUG
-
-inline
-#endif
-void keepHeat(float *restrict val, float *restrict val_new, size_t m, size_t n, const heatPoint *restrict srcs, size_t numHeat) {
+inline void keepHeat(float *restrict val, float *restrict val_new, size_t m, size_t n, const heatPoint *restrict srcs, size_t numHeat) {
 	for (size_t i = 0; i < numHeat; ++i) {
 		val[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;
 		val_new[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;

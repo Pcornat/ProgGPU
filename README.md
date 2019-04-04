@@ -7,6 +7,6 @@ Ce projet se fait dans le cadre de la matière CHPS0811 Programmation GPU avanc�
 Résolution de l'équation de la diffusion de la chaleur en 2D, sur un GPU.
 
 ## 3. Déroulement
-* Version séquentielle
-* Version OpenMP
+* Version séquentielle :heavy_check_mark:
+* Version OpenMP :heavy_check_mark:
 * version GPU en CUDA

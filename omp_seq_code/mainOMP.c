@@ -5,8 +5,8 @@
 #include <opencv2/core/core_c.h>
 
 /* user include */
-#include <run_functions.h>
-#include <compute_functions.h>
+#include "run_functions.h"
+#include "compute_functions.h"
 
 int main(int argc, char *argv[]) {
 	/*
