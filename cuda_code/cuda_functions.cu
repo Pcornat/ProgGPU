@@ -1,6 +1,3 @@
-// Created by postaron on 26/02/2019.
-//
-
 #include "cuda_functions.cuh"
 #include <stdio.h>
 #include "compute_functions.cuh"
@@ -145,11 +142,18 @@ int32_t run_cuda(float *h_matrix, size_t matCol, size_t matRow, heatPoint *h_src
 		return EXIT_FAILURE;
 	}
 
-	//À optimiser avec les defines en fonction du GPU (bon là je vais faire en dur pour le Kepler hein bon)
-	dim3 dimGrid = {(uint32_t) ceil(matCol / 256.0), (uint32_t) ceil(matRow / 256.0), 1};
-	dim3 dimBlock = {1, 1, 1};
+	//À optimiser avec les defines en fonction du GPU (je vais faire en dur pour le Kepler pour l'instant)
+	dim3 dimGrid;
+    dimGrid.x = (uint32_t) ceil((matCol - 1)/16.0);
+    dimGrid.y = (uint32_t) ceil((matRow - 1)/16.0);
+    dimGrid.z = 1;
 
-	simulationKernel << < dimGrid, dimBlock >> > (d_val_new, d_val, matCol, matRow, convergence, numIter, d_srcs, srcSize);
+	dim3 dimBlock;
+    dimBlock.x = 16;
+    dimBlock.y = 16;
+    dimBlock.z = 1;
+
+	simulationKernel <<<dimGrid, dimBlock>>> (d_val_new, d_val, matCol, matRow, convergence, numIter, d_srcs, srcSize);
 
 	if (cudaMemChk(cudaMemcpy(h_matrix, d_val, matCol * matRow * sizeof(float), cudaMemcpyDeviceToHost)) == EXIT_FAILURE) {
 		fprintf(stderr, "Transfert du résultat impossible.\n");
