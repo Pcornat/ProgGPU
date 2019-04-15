@@ -1,3 +1,7 @@
 .idea/
 cmake*
 .ipynb_checkpoints/
+*.ipynb
+*.gz
+pattern_rsync
+build/
