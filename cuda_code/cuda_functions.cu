@@ -1,8 +1,9 @@
 #include "cuda_functions.cuh"
 #include <stdio.h>
-#include "compute_functions.cuh"
-#include <cuda.h>
 #include <math.h>
+#include <cuda.h>
+
+#include "compute_functions.cuh"
 
 inline int32_t cudaMemChk(cudaError_t error) {
 	if (error != cudaSuccess) {
@@ -97,8 +98,12 @@ bool run_configCUDA(const char *filename, float **matrix, size_t *matCol, size_t
 }
 
 int32_t run_cuda(float *h_matrix, size_t matCol, size_t matRow, heatPoint *h_srcs, size_t srcSize, uint32_t numIter, uint32_t sortieImage, CvMat *img, float convergence) {
-	float *d_val = NULL, *d_val_new = NULL;
+	uint32_t numThread = 16;
+	float *d_val = NULL, *d_val_new = NULL, kernelTime = 0.f;
 	heatPoint *d_srcs = NULL;
+	cudaEvent_t start, stop;
+
+	cudaEventCreate(&start), cudaEventCreate(&stop);
 
 	if (cudaMemChk(cudaMalloc((void **) &d_val, matCol * matRow * sizeof(float))) == EXIT_FAILURE) {
 		end_simulation(h_matrix, h_srcs);
@@ -134,7 +139,7 @@ int32_t run_cuda(float *h_matrix, size_t matCol, size_t matRow, heatPoint *h_src
 		return EXIT_FAILURE;
 	}
 
-	if (cudaMemChk(cudaMemcpy(d_val_new, d_val, matCol * matRow * sizeof(float), cudaMemcpyDeviceToDevice)) == EXIT_FAILURE) {
+	if (cudaMemChk(cudaMemset(d_val_new, 0, matCol * matRow * sizeof(float))) == EXIT_FAILURE) {
 		cudaFree(d_val);
 		cudaFree(d_val_new);
 		cudaFree(d_srcs);
@@ -142,18 +147,21 @@ int32_t run_cuda(float *h_matrix, size_t matCol, size_t matRow, heatPoint *h_src
 		return EXIT_FAILURE;
 	}
 
-	//À optimiser avec les defines en fonction du GPU (je vais faire en dur pour le Kepler pour l'instant)
+	//À optimiser avec les defines en fonction du GPU (en dur pour le Kepler pour l'instant)
 	dim3 dimGrid;
-    dimGrid.x = (uint32_t) ceil((matCol - 1)/16.0);
-    dimGrid.y = (uint32_t) ceil((matRow - 1)/16.0);
-    dimGrid.z = 1;
+	dimGrid.x = (uint32_t) ceil((matCol - 1.0) / numThread);
+	dimGrid.y = (uint32_t) ceil((matRow - 1.0) / numThread);
+	dimGrid.z = 1;
 
 	dim3 dimBlock;
-    dimBlock.x = 16;
-    dimBlock.y = 16;
-    dimBlock.z = 1;
+	dimBlock.x = numThread;
+	dimBlock.y = numThread;
+	dimBlock.z = 1;
 
-	simulationKernel <<<dimGrid, dimBlock>>> (d_val_new, d_val, matCol, matRow, convergence, numIter, d_srcs, srcSize);
+	//Lancement du chrono
+	cudaEventRecord(start);
+	simulationKernel << < dimGrid, dimBlock >> > (d_val_new, d_val, matCol, matRow, convergence, numIter, d_srcs, srcSize);
+	cudaEventRecord(stop); //Arrêt
 
 	if (cudaMemChk(cudaMemcpy(h_matrix, d_val, matCol * matRow * sizeof(float), cudaMemcpyDeviceToHost)) == EXIT_FAILURE) {
 		fprintf(stderr, "Transfert du résultat impossible.\n");
@@ -163,6 +171,11 @@ int32_t run_cuda(float *h_matrix, size_t matCol, size_t matRow, heatPoint *h_src
 		end_simulation(h_matrix, h_srcs);
 		return EXIT_SUCCESS;
 	}
+	cudaEventSynchronize(stop);
+
+	cudaEventElapsedTime(&kernelTime, start, stop);
+
+	printf("Temps de la simulation : %f\n", kernelTime);
 
 	cudaFree(d_val);
 	cudaFree(d_val_new);

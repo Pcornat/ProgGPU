@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
 	img = cvCreateMat((int32_t) (matRow * sy), (int32_t) (matCol * sx), CV_8UC3);
 
-	returnValue = run_cuda(h_val, matCol, matRow, h_srcs, srcSize, numIter, sortieImage, img, 0);
+	returnValue = run_cuda(h_val, matCol, matRow, h_srcs, srcSize, numIter, sortieImage, img, CONVERGENCE);
 
 
 	cvReleaseData(img);
