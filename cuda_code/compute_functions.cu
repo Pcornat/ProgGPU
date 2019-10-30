@@ -6,7 +6,7 @@
 #include <cuda.h>
 #include <device_launch_parameters.h>
 
-__host__ __device__ size_t offset(size_t x, size_t y, size_t m) {
+__host__ __device__ inline size_t offset(size_t x, size_t y, size_t m) {
 	return x * m + y;
 }
 

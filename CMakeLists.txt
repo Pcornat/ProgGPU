@@ -4,7 +4,7 @@ project(ProgGPU C CUDA)
 set(CMAKE_C_STANDARD 99)
 
 find_package(OpenMP REQUIRED)
-find_package(OpenCV 3.4.5 REQUIRED)
+find_package(OpenCV 3.2.0 REQUIRED)
 
 include_directories(.)
 include_directories(${OpenCV_INCLUDE_DIRS})
