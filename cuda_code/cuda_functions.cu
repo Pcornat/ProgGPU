@@ -1,9 +1,21 @@
 #include "cuda_functions.cuh"
-#include <stdio.h>
-#include <math.h>
+#include "compute_functions.cuh"
+#include <cstdio>
+#include <cmath>
 #include <cuda.h>
 
-#include "compute_functions.cuh"
+#define CUDA_RT_CALL(call) { \
+cudaError_t cudaStatus = call; \
+        if (cudaSuccess != cudaStatus) {\
+            fprintf(stderr,\
+            "ERROR: CUDA RT call \"%s\" in line %d of file %s failed"\
+                    "with "\
+                    "%s (%d).\n",\
+                    #call, __LINE__, __FILE__,cudaGetErrorString(cudaStatus), cudaStatus); \
+            throw std::runtime_error("CUDA ERROR"); \
+        }\
+    }
+
 
 inline int32_t cudaMemChk(cudaError_t error) {
 	if (error != cudaSuccess) {
@@ -13,7 +25,14 @@ inline int32_t cudaMemChk(cudaError_t error) {
 		return EXIT_SUCCESS;
 }
 
-bool run_configCUDA(const char *filename, float **matrix, size_t *matCol, size_t *matRow, heatPoint **srcsHeat, size_t *srcsSize, uint32_t *numIter, uint32_t *sortieImage) {
+bool run_configCUDA(const char *filename,
+					float **matrix,
+					size_t *matCol,
+					size_t *matRow,
+					heatPoint **srcsHeat,
+					size_t *srcsSize,
+					uint32_t *numIter,
+					uint32_t *sortieImage) {
 	//Vérif partielle.
 	int64_t numHeatPnt = 0;
 	FILE *file = NULL;
@@ -24,7 +43,10 @@ bool run_configCUDA(const char *filename, float **matrix, size_t *matCol, size_t
 		return false;
 	}
 
-	if (fscanf(file, "%zu", matCol) == EOF || fscanf(file, "%zu", matRow) == EOF || fscanf(file, "%u", numIter) == EOF || fscanf(file, "%u", sortieImage) == EOF ||
+	if (fscanf(file, "%zu", matCol) == EOF ||
+		fscanf(file, "%zu", matRow) == EOF ||
+		fscanf(file, "%u", numIter) == EOF ||
+		fscanf(file, "%u", sortieImage) == EOF ||
 		fscanf(file, "%li", &numHeatPnt) == EOF) {
 		perror("Erreur fscanf : ");
 		fclose(file);
@@ -97,7 +119,15 @@ bool run_configCUDA(const char *filename, float **matrix, size_t *matCol, size_t
 	return fclose(file) == 0;
 }
 
-int32_t run_cuda(float *h_matrix, size_t matCol, size_t matRow, heatPoint *h_srcs, size_t srcSize, uint32_t numIter, uint32_t sortieImage, CvMat *img, float convergence) {
+int32_t run_cuda(float *h_matrix,
+				 size_t matCol,
+				 size_t matRow,
+				 heatPoint *h_srcs,
+				 size_t srcSize,
+				 uint32_t numIter,
+				 uint32_t sortieImage,
+				 CvMat *img,
+				 float convergence) {
 	uint32_t numThread = 16;
 	float *d_val = NULL, *d_val_new = NULL, kernelTime = 0.f;
 	heatPoint *d_srcs = NULL;
