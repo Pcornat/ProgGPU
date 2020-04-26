@@ -17,15 +17,6 @@ cudaError_t cudaStatus = call; \
         }\
     }
 
-
-inline int32_t cudaMemChk(cudaError_t error) {
-	if (error != cudaSuccess) {
-		fprintf(stderr, "Erreur allocation CUDA\n");
-		return EXIT_FAILURE;
-	} else
-		return EXIT_SUCCESS;
-}
-
 void run_configCUDA(const char *filename,
 					host_vector<float> &matrix,
 					size_t &matCol,
