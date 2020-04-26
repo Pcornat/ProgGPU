@@ -9,26 +9,28 @@
 #include <cstdint>
 #include <opencv2/core.hpp>
 #include "compute_functions.cuh"
+#include <thrust/host_vector.h>
 
-bool run_configCUDA(const char *filename,
-					float **matrix,
-					size_t *matCol,
-					size_t *matRow,
-					heatPoint **srcsHeat,
-					size_t *srcsSize,
-					uint32_t *numIter,
-					uint32_t *sortieImage);
+template<typename T>
+using host_vector = thrust::host_vector<T>;
 
-int32_t run_cuda(float *h_matrix,
-				 size_t matCol,
-				 size_t matRow,
-				 heatPoint *h_srcs,
-				 size_t srcSize,
-				 uint32_t numIter,
-				 uint32_t sortieImage,
-				 CvMat *img,
-				 float convergence);
+void run_configCUDA(const char *filename,
+					host_vector<float> &matrix,
+					size_t &matCol,
+					size_t &matRow,
+					host_vector<heatPoint> &srcsHeat,
+					uint32_t &numIter,
+					uint32_t &sortieImage);
 
-void end_simulation(float *__restrict h_matrix, heatPoint *__restrict h_srcs);
+void run_cuda(host_vector<float> &h_matrix,
+			  size_t matCol,
+			  size_t matRow,
+			  host_vector<heatPoint> &h_srcs,
+			  size_t srcSize,
+			  uint32_t numIter,
+			  uint32_t sortieImage,
+			  cv::Mat &img,
+			  const float convergence);
+
 
 #endif //PROGGPU_CUDA_FUNCTIONS_CUH

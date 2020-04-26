@@ -75,7 +75,7 @@ set(NOTCUDA_OPTIONS
 
 set(CUDA_OPTIONS
 	-m64
-	-Xcompiler=-pipe,-march=native,-m64,-Wall,-Wextra,-funroll-loops,-flto,-fuse-ld=gold,-fuse-linker-plugin
+	-Xcompiler=-pipe,-march=native,-m64,-Wall,-Wextra,-funroll-loops
 	-gencode arch=compute_61,code=sm_61)
 #endif ()
 

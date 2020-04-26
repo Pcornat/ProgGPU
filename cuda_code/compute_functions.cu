@@ -3,51 +3,55 @@
 //
 
 #include "compute_functions.cuh"
-#include <cuda.h>
-//#include <device_launch_parameters.h>
 
-__host__ __device__
-inline size_t offset(size_t x, size_t y, size_t m) {
-	return x * m + y;
-}
+#ifdef HAVE_CUB
+
+#include <cub/cub.cuh>
+
+#endif
 
 __device__ void keepHeat(float *__restrict d_val,
 						 float *__restrict d_val_new,
-						 size_t m,
-						 size_t n,
+						 const size_t m,
+						 const size_t n,
 						 const heatPoint *__restrict srcs,
-						 size_t numHeat,
-						 int32_t x,
-						 int32_t y) {
-	/*for (size_t i = 0; i < numHeat; ++i) {
-		d_val[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;
-		d_val_new[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;
-	}*/
+						 const size_t numHeat,
+						 const uint32_t x,
+						 const uint32_t y) {
+	for (size_t i = 0; i < numHeat; ++i) {
+		if (srcs[i].x == x && srcs[i].y == y) {
+			d_val[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;
+			d_val_new[offset(srcs[i].x, srcs[i].y, m)] = 1.0f;
+		}
+	}
 }
 
 __global__ void simulationKernel(float *__restrict d_val_new,
 								 float *__restrict d_val,
-								 size_t m,
-								 size_t n,
-								 float convergence,
-								 uint32_t nite,
-								 const heatPoint *__restrict d_srcsHeat,
-								 size_t numHeat) {
-	int32_t x = blockIdx.x * blockDim.x + threadIdx.x,
-			y = blockIdx.y * blockDim.y + threadIdx.y;
+								 const size_t m,
+								 const size_t n,
+								 const float convergence,
+								 const uint32_t nite,
+								 const heatPoint *__restrict const d_srcsHeat,
+								 const size_t numHeat) {
+	const std::uint32_t ix = blockIdx.x * blockDim.x + threadIdx.x,
+			iy = blockIdx.y * blockDim.y + threadIdx.y;
 
 	float error = 1.0f;
 
-	if (x > 0 && x < n && y > 0 && y < m) {
+	if (ix > 1 && ix < n && iy > 1 && iy < m) {
 		for (size_t i = 0; i < nite && error > convergence; ++i) {
-			d_val_new[offset(x, y, m)] =
-					0.25 * (d_val[offset(x, y - 1, m)] + d_val[offset(x, y - 1, m)] + d_val[offset(x - 1, y, m)] + d_val[offset(x + 1, y, m)]);
+			d_val_new[offset(ix, iy, m)] = 0.25f *
+										   (d_val[offset(ix, iy - 1, m)] +
+											d_val[offset(ix, iy + 1, m)] +
+											d_val[offset(ix - 1, iy, m)] +
+											d_val[offset(ix + 1, iy, m)]);
 
-			error = fmaxf(error, fabsf(d_val_new[offset(x, y, m)] - d_val[offset(x, y, m)]));
+			error = fmaxf(error, fabsf(d_val_new[offset(ix, iy, m)] - d_val[offset(ix, iy, m)]));
 
-			d_val[offset(x, y, m)] = d_val_new[offset(x, y, m)];
+			d_val[offset(ix, iy, m)] = d_val_new[offset(ix, iy, m)];
 
-			keepHeat(d_val, d_val_new, m, n, d_srcsHeat, numHeat, x, y);
+			keepHeat(d_val, d_val_new, m, n, d_srcsHeat, numHeat, ix, iy);
 		}
 	}
 

@@ -2,7 +2,8 @@
 #include "compute_functions.cuh"
 #include <cstdio>
 #include <cmath>
-#include <cuda.h>
+#include <fstream>
+#include <thrust/device_vector.h>
 
 #define CUDA_RT_CALL(call) { \
 cudaError_t cudaStatus = call; \
@@ -25,197 +26,125 @@ inline int32_t cudaMemChk(cudaError_t error) {
 		return EXIT_SUCCESS;
 }
 
-bool run_configCUDA(const char *filename,
-					float **matrix,
-					size_t *matCol,
-					size_t *matRow,
-					heatPoint **srcsHeat,
-					size_t *srcsSize,
-					uint32_t *numIter,
-					uint32_t *sortieImage) {
+void run_configCUDA(const char *filename,
+					host_vector<float> &matrix,
+					size_t &matCol,
+					size_t &matRow,
+					host_vector<heatPoint> &srcsHeat,
+					uint32_t &numIter,
+					uint32_t &sortieImage) {
 	//Vérif partielle.
 	int64_t numHeatPnt = 0;
-	FILE *file = NULL;
-	file = fopen(filename, "r");
+	std::ifstream file(filename);
 
-	if (file == NULL) {
-		perror("Erreur fopen : ");
-		return false;
-	}
-
-	if (fscanf(file, "%zu", matCol) == EOF ||
-		fscanf(file, "%zu", matRow) == EOF ||
-		fscanf(file, "%u", numIter) == EOF ||
-		fscanf(file, "%u", sortieImage) == EOF ||
-		fscanf(file, "%li", &numHeatPnt) == EOF) {
-		perror("Erreur fscanf : ");
-		fclose(file);
-		return false;
-	}
+	file >> matCol >> matRow >> numIter >> sortieImage >> numHeatPnt;
 
 	if (numHeatPnt <= 0) {
-		fclose(file);
-		return false;
+		throw std::runtime_error("Au moins 1 point de chaleur nécessaire.");
 	}
 
-	*srcsSize = numHeatPnt;
 
-	if (*matCol <= 0) *matCol = 1000;
-	if (*matRow <= 0) *matRow = 1000;
+	if (matCol <= 0) matCol = 1000;
+	if (matRow <= 0) matRow = 1000;
 
-	if ((*matrix = (float *) calloc(*matRow * *matCol, sizeof(float))) == NULL) {
-		perror("Erreir calloc matrices : ");
-		fclose(file);
-		return false;
-	}
+	matrix.resize(matRow * matCol, 0.f);
 
-	if ((*srcsHeat = (heatPoint *) calloc(*srcsSize, sizeof(heatPoint))) == NULL) {
-		perror("Error malloc heatPoints :");
-		free(*matrix);
-		fclose(file);
-		return false;
-	}
+	srcsHeat.resize(numHeatPnt, { 0, 0 });
 
-	if (*sortieImage > *numIter)
-		*sortieImage %= *numIter;
+	if (sortieImage > numIter)
+		sortieImage %= numIter;
 
-	for (int64_t i = 0; i < numHeatPnt; ++i) {
+	for (auto &heat : srcsHeat) {
 		int64_t m = 0, n = 0;
 		size_t x, y;
-		if (fscanf(file, "%li", &m) == EOF || fscanf(file, "%li", &n) == EOF) {
-			fclose(file);
-			free(matrix);
-			return false;
+
+		file >> m >> n;
+		if (m < 0 || m >= matRow || n < 0 || n >= matCol) {
+			throw std::runtime_error("Les coordonnées du point de chaleur ne sont pas dans la matrice.");
 		}
-		if (m < 0 || m >= *matRow || n < 0 || n >= *matCol) {
-			fclose(file);
-			free(matrix);
-			return false;
-		}
-		(*srcsHeat)[i].x = x = (size_t) n, (*srcsHeat)[i].y = y = (size_t) m;
+		heat.x = x = static_cast<size_t>(n), heat.y = y = static_cast<size_t>(m);
 		/*
 		 * Les coordonnées données dans le fichier de configuration servent à décrire le milieu du point de chaleur (c'est un carré)
 		 */
-		(*matrix)[offset(x, y, *matRow)] = 1.0f;
+		matrix[offset(x, y, matRow)] = 1.0f;
 
-		(*matrix)[offset(x, y + 1, *matRow)] = 1.0f;
+		matrix[offset(x, y + 1, matRow)] = 1.0f;
 
-		(*matrix)[offset(x + 1, y, *matRow)] = 1.0f;
+		matrix[offset(x + 1, y, matRow)] = 1.0f;
 
-		(*matrix)[offset(x + 1, y + 1, *matRow)] = 1.0f;
+		matrix[offset(x + 1, y + 1, matRow)] = 1.0f;
 
-		(*matrix)[offset(x - 1, y, *matRow)] = 1.0f;
+		matrix[offset(x - 1, y, matRow)] = 1.0f;
 
-		(*matrix)[offset(x, y - 1, *matRow)] = 1.0f;
+		matrix[offset(x, y - 1, matRow)] = 1.0f;
 
-		(*matrix)[offset(x - 1, y - 1, *matRow)] = 1.0f;
+		matrix[offset(x - 1, y - 1, matRow)] = 1.0f;
 
-		(*matrix)[offset(x - 1, y + 1, *matRow)] = 1.0f;
+		matrix[offset(x - 1, y + 1, matRow)] = 1.0f;
 
-		(*matrix)[offset(x + 1, y - 1, *matRow)] = 1.0f;
+		matrix[offset(x + 1, y - 1, matRow)] = 1.0f;
 
 	}
-
-	return fclose(file) == 0;
 }
 
-int32_t run_cuda(float *h_matrix,
-				 size_t matCol,
-				 size_t matRow,
-				 heatPoint *h_srcs,
-				 size_t srcSize,
-				 uint32_t numIter,
-				 uint32_t sortieImage,
-				 CvMat *img,
-				 float convergence) {
-	uint32_t numThread = 16;
-	float *d_val = NULL, *d_val_new = NULL, kernelTime = 0.f;
-	heatPoint *d_srcs = NULL;
+void run_cuda(host_vector<float> &h_matrix,
+			  size_t matCol,
+			  size_t matRow,
+			  host_vector<heatPoint> &h_srcs,
+			  size_t srcSize,
+			  uint32_t numIter,
+			  uint32_t sortieImage,
+			  cv::Mat &img,
+			  const float convergence) {
+	constexpr uint32_t numThread = 256;
+	thrust::device_vector<float> d_val, d_val_new;
+	thrust::device_vector<heatPoint> d_srcs;
+	float kernelTime = 0.f;
 	cudaEvent_t start, stop;
 
 	cudaEventCreate(&start), cudaEventCreate(&stop);
-
-	if (cudaMemChk(cudaMalloc((void **) &d_val, matCol * matRow * sizeof(float))) == EXIT_FAILURE) {
-		end_simulation(h_matrix, h_srcs);
-		return EXIT_FAILURE;
-	}
-
-	if (cudaMemChk(cudaMalloc((void **) &d_val_new, matCol * matRow * sizeof(float))) == EXIT_FAILURE) {
-		cudaFree(d_val);
-		end_simulation(h_matrix, h_srcs);
-		return EXIT_FAILURE;
-	}
-
-	if (cudaMemChk(cudaMalloc((void **) &d_srcs, srcSize * sizeof(heatPoint))) == EXIT_FAILURE) {
-		cudaFree(d_val);
-		cudaFree(d_val_new);
-		end_simulation(h_matrix, h_srcs);
-		return EXIT_FAILURE;
-	}
-
-	if (cudaMemChk(cudaMemcpy(d_val, h_matrix, matCol * matRow * sizeof(float), cudaMemcpyHostToDevice)) == EXIT_FAILURE) {
-		cudaFree(d_val);
-		cudaFree(d_val_new);
-		cudaFree(d_srcs);
-		end_simulation(h_matrix, h_srcs);
-		return EXIT_FAILURE;
-	}
-
-	if (cudaMemChk(cudaMemcpy(d_srcs, h_srcs, srcSize * sizeof(heatPoint), cudaMemcpyHostToDevice)) == EXIT_FAILURE) {
-		cudaFree(d_val);
-		cudaFree(d_val_new);
-		cudaFree(d_srcs);
-		end_simulation(h_matrix, h_srcs);
-		return EXIT_FAILURE;
-	}
-
-	if (cudaMemChk(cudaMemset(d_val_new, 0, matCol * matRow * sizeof(float))) == EXIT_FAILURE) {
-		cudaFree(d_val);
-		cudaFree(d_val_new);
-		cudaFree(d_srcs);
-		end_simulation(h_matrix, h_srcs);
-		return EXIT_FAILURE;
-	}
+	d_val.resize(matCol * matRow);
+	d_val_new.resize(matCol * matRow, 0);
+	d_srcs.resize(h_srcs.size());
 
 	//À optimiser avec les defines en fonction du GPU (en dur pour le Kepler pour l'instant)
-	dim3 dimGrid;
-	dimGrid.x = (uint32_t) ceil((matCol - 1.0) / numThread);
-	dimGrid.y = (uint32_t) ceil((matRow - 1.0) / numThread);
-	dimGrid.z = 1;
+	const dim3 dimGrid{
+			static_cast<std::uint32_t>(std::ceil((matCol - 1.0) / numThread)),
+			static_cast<std::uint32_t>(std::ceil((matRow - 1.0) / numThread)),
+			1 };
 
-	dim3 dimBlock;
-	dimBlock.x = numThread;
-	dimBlock.y = numThread;
-	dimBlock.z = 1;
-
+	const dim3 dimBlock{ numThread, numThread, 1 };
+	CUDA_RT_CALL(cudaMemcpyAsync(thrust::raw_pointer_cast(d_val.data()),
+								 thrust::raw_pointer_cast(h_matrix.data()),
+								 h_matrix.size() * sizeof(float),
+								 cudaMemcpyHostToDevice))
+	CUDA_RT_CALL(cudaMemcpyAsync(thrust::raw_pointer_cast(d_srcs.data()),
+								 thrust::raw_pointer_cast(h_srcs.data()),
+								 h_srcs.size() * sizeof(heatPoint),
+								 cudaMemcpyHostToDevice))
 	//Lancement du chrono
 	cudaEventRecord(start);
-	simulationKernel << < dimGrid, dimBlock >> > (d_val_new, d_val, matCol, matRow, convergence, numIter, d_srcs, srcSize);
+	simulationKernel<<< dimGrid, dimBlock >>>(d_val_new.data().get(),
+											  d_val.data().get(),
+											  matCol,
+											  matRow,
+											  convergence,
+											  numIter,
+											  d_srcs.data().get(),
+											  srcSize);
 	cudaEventRecord(stop); //Arrêt
-
-	if (cudaMemChk(cudaMemcpy(h_matrix, d_val, matCol * matRow * sizeof(float), cudaMemcpyDeviceToHost)) == EXIT_FAILURE) {
-		fprintf(stderr, "Transfert du résultat impossible.\n");
-		cudaFree(d_val);
-		cudaFree(d_val_new);
-		cudaFree(d_srcs);
-		end_simulation(h_matrix, h_srcs);
-		return EXIT_SUCCESS;
-	}
 	cudaEventSynchronize(stop);
+
+	CUDA_RT_CALL(cudaMemcpyAsync(thrust::raw_pointer_cast(h_matrix.data()),
+								 thrust::raw_pointer_cast(d_val.data()),
+								 h_matrix.size() * sizeof(float),
+								 cudaMemcpyDeviceToHost))
+	CUDA_RT_CALL(cudaMemcpyAsync(thrust::raw_pointer_cast(h_srcs.data()),
+								 thrust::raw_pointer_cast(d_srcs.data()),
+								 h_srcs.size() * sizeof(float),
+								 cudaMemcpyDeviceToHost))
 
 	cudaEventElapsedTime(&kernelTime, start, stop);
 
 	printf("Temps de la simulation : %f\n", kernelTime);
-
-	cudaFree(d_val);
-	cudaFree(d_val_new);
-	cudaFree(d_srcs);
-	end_simulation(h_matrix, h_srcs);
-	return EXIT_SUCCESS;
-}
-
-void end_simulation(float *__restrict h_matrix, heatPoint *__restrict h_srcs) {
-	free(h_matrix);
-	free(h_srcs);
-	puts("Libération mémoire");
 }
